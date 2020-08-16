@@ -7,8 +7,7 @@ import time
 from torch.utils.data import DataLoader
 import torch.nn as nn
 import torch.optim as optim
-
-
+from tqdm import tqdm
 
 import config
 import dataset
@@ -24,7 +23,7 @@ def test(net, test_loader, device='cpu'):
     net.eval()
     with torch.no_grad():
         accs = []
-        for it, (seq, attn_masks, labels) in enumerate(test_loader):
+        for it, (seq, attn_masks, labels) in enumerate(tqdm(test_loader)):
             seq, attn_masks, labels = seq.cuda(device), attn_masks.cuda(device), labels.cuda(device)
 
             logits = net(seq, attn_masks)
@@ -40,7 +39,7 @@ def train_model(net, criterion, opti, train_loader, test_loader=None, print_ever
     for e in range(1, n_epochs+1):
         t0 = time.perf_counter()
         e_loss = []
-        for batch_num, (seq_attnmask_labels) in enumerate(train_loader):
+        for batch_num, (seq_attnmask_labels) in enumerate(tqdm(train_loader)):
             # Clear gradients
             opti.zero_grad()
 
@@ -75,13 +74,19 @@ def train_model(net, criterion, opti, train_loader, test_loader=None, print_ever
 def main():
     device = f'cuda:0'
     # Creating instances of training and validation set
-    train_set = dataset.dataset(dataset_fname = '/home/anna/seq_classify/data/aclImdb/imdb_train_df.csv', max_len=config.MAX_SEQ_LEN)
-    test_set = dataset.dataset(dataset_fname = '/home/anna/seq_classify/data/aclImdb/imdb_test_df.csv', max_len=config.MAX_SEQ_LEN)
+    train_set = dataset.dataset(dataset_fname = config.train_fname,
+                                max_len=config.MAX_SEQ_LEN,
+                                sample_ratio = 0.5)
+    test_set = dataset.dataset(dataset_fname = config.test_fname,
+                               max_len=config.MAX_SEQ_LEN,
+                               sample_ratio = 0.5)
 
     train_loader = DataLoader(train_set, shuffle = True,
-                              batch_size=config.BATCH_SIZE, num_workers=config.NUM_CPU_WORKERS)
+                              batch_size=config.BATCH_SIZE,
+                              num_workers=config.NUM_CPU_WORKERS)
     test_loader = DataLoader(test_set, shuffle = True,
-                             batch_size=config.BATCH_SIZE, num_workers=config.NUM_CPU_WORKERS)
+                             batch_size=config.BATCH_SIZE,
+                             num_workers=config.NUM_CPU_WORKERS)
 
     bert_model = model.bert_classifier(freeze_bert=True)
     bert_model.to(device)

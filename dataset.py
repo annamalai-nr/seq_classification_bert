@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import Dataset
-from transformers import BertTokenizer
+from transformers import BertTokenizerFast, DistilBertTokenizerFast
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
@@ -11,17 +11,18 @@ import config
 class dataset(Dataset):
     def __init__(self, dataset_fname, max_len, sample_ratio=None):
         # Initialize the BERT tokenizer
-        self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        self.tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
+        # self.tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
         self.max_len = max_len
 
-        train_df = pd.read_csv(dataset_fname)
+        df = pd.read_csv(dataset_fname)
         if sample_ratio:
-            train_df = train_df.sample(frac=sample_ratio)
-        print(f'Loaded dataframe of shape: {train_df.shape}')
-        self.sent_token_ids_attn_masks = [self._get_token_ids_attn_mask(s) for s in tqdm(train_df.sentence)]
-        self.labels = np.array(train_df.label, dtype=int)
+            df = df.sample(frac=sample_ratio)
+        print(f'Loaded dataframe of shape: {df.shape}')
+        self.sent_token_ids_attn_masks = [self._get_token_ids_attn_mask(s) for s in tqdm(df.sentence)]
+        self.labels = np.array(df.label, dtype=int)
 
-        print(f'Loaded X_train and y_train from {config.train_fname}, '
+        print(f'Loaded X_train and y_train from {dataset_fname}, '
               f'shapes: {len(self.sent_token_ids_attn_masks), self.labels.shape}')
 
 
@@ -32,7 +33,7 @@ class dataset(Dataset):
         if len(tokens) < self.max_len:
             tokens = tokens + ['[PAD]' for _ in range(self.max_len - len(tokens))]  # Padding sentences
         else:
-            tokens = tokens[:self.max_len - 1] + ['[SEP]']  # Prunning the list to be of specified max length
+            tokens = tokens[:self.max_len - 1] + ['[SEP]']  # Pruning the list to be of specified max length
 
         tokens_ids = self.tokenizer.convert_tokens_to_ids(
             tokens)  # Obtaining the indices of the tokens in the BERT Vocabulary

@@ -1,13 +1,12 @@
 import torch.nn as nn
-from transformers import BertModel, DistilBertModel
+from transformers import AutoModel
 
 
 class bert_classifier(nn.Module):
-    def __init__(self, freeze_bert=True):
+    def __init__(self, model_name, context_vector_size, freeze_bert=True):
         super(bert_classifier, self).__init__()
         # Instantiating BERT model object
-        self.bert_layer = BertModel.from_pretrained('bert-base-uncased')
-        # self.bert_layer = DistilBertModel.from_pretrained('distilbert-base-uncased')
+        self.bert_layer = AutoModel.from_pretrained(model_name)
 
         # Freeze bert layers
         if freeze_bert:
@@ -15,12 +14,12 @@ class bert_classifier(nn.Module):
                 p.requires_grad = False
 
         # Classification layer
-        self.fc = nn.Linear(768, 2)
+        self.fc = nn.Linear(context_vector_size, 2)
 
         #Dropout
         self.dp20 = nn.Dropout(0.2)
 
-    def forward(self, seq, attn_masks):
+    def forward_bert(self, seq, attn_masks):
         '''
         Inputs:
             -seq : Tensor of shape [B, T] containing token ids of sequences
@@ -43,7 +42,7 @@ class bert_classifier(nn.Module):
         return logits
 
 
-    def forward_distilbert(self, seq, attn_masks):
+    def forward(self, seq, attn_masks):
         '''
         Inputs:
             -seq : Tensor of shape [B, T] containing token ids of sequences
@@ -59,6 +58,6 @@ class bert_classifier(nn.Module):
         cls_rep = self.dp20(cls_rep)
 
         # Feeding cls_rep to the classifier layer
-        logits = self.cls_layer(cls_rep)
+        logits = self.fc(cls_rep)
 
         return logits

@@ -62,9 +62,12 @@ def train_model(net, criterion, optimizer, scheduler, train_loader, test_loader=
             # Backpropagating the gradients
             loss.backward()
 
+            # Clip gradient norms
+            torch.nn.utils.clip_grad_norm_(net.parameters(), 1.0)
+
             # Optimization step
             optimizer.step()
-            scheduler.step()
+            # scheduler.step()
 
             if (batch_num + 1) % print_every == 0:
                 acc = get_accuracy_from_logits(logits, labels)
@@ -83,12 +86,12 @@ def main():
     train_set = dataset.dataset(dataset_fname = config.train_fname,
                                 model_name = config.MODEL_NAME,
                                 max_len=config.MAX_SEQ_LEN,
-                                sample_ratio = .1,
+                                sample_ratio =None,
                                 is_lower=config.IS_LOWER)
     test_set = dataset.dataset(dataset_fname = config.test_fname,
                                model_name=config.MODEL_NAME,
                                max_len=config.MAX_SEQ_LEN,
-                               sample_ratio = .1,
+                               sample_ratio =None,
                                is_lower=config.IS_LOWER)
 
     #creating dataloader
@@ -107,31 +110,33 @@ def main():
     print(f"created NEW TRANSFORMER model for finetuning: {bert_model}")
 
     #loss function
-    criterion = nn.CrossEntropyLoss()
+    # criterion = nn.CrossEntropyLoss()
+    criterion = nn.NLLLoss()
 
     #optimizer and scheduler
-    # optimizer = optim.Adam(bert_model.parameters(), lr=config.LR)
-    param_optimizer = list(bert_model.named_parameters())
-    no_decay = ["bias", "LayerNorm.bias", "LayerNorm.weight"]
-    optimizer_parameters = [
-        {
-            "params": [
-                p for n, p in param_optimizer if not any(nd in n for nd in no_decay)
-            ],
-            "weight_decay": 0.001,
-        },
-        {
-            "params": [
-                p for n, p in param_optimizer if any(nd in n for nd in no_decay)
-            ],
-            "weight_decay": 0.0,
-        },
-    ]
-    # print(optimizer_parameters)
+    optimizer = optim.Adam(bert_model.parameters(), lr=config.LR)
 
-    num_train_steps = int(len(train_set) / config.BATCH_SIZE * config.NUM_EPOCHS)
-    optimizer = AdamW(optimizer_parameters, lr=config.LR)
-    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=0, num_training_steps=num_train_steps)
+    # param_optimizer = list(bert_model.named_parameters())
+    # no_decay = ["bias", "LayerNorm.bias", "LayerNorm.weight"]
+    # optimizer_parameters = [
+    #     {
+    #         "params": [
+    #             p for n, p in param_optimizer if not any(nd in n for nd in no_decay)
+    #         ],
+    #         "weight_decay": 0.001,
+    #     },
+    #     {
+    #         "params": [
+    #             p for n, p in param_optimizer if any(nd in n for nd in no_decay)
+    #         ],
+    #         "weight_decay": 0.0,
+    #     },
+    # ]
+    # num_train_steps = int(len(train_set) / config.BATCH_SIZE * config.NUM_EPOCHS)
+    # optimizer = AdamW(optimizer_parameters, lr=config.LR)
+    # scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=0, num_training_steps=num_train_steps)
+
+    scheduler = None
 
     # Multi GPU setting
     if config.MULTIGPU:

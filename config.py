@@ -2,7 +2,7 @@ import os, torch, sys
 import psutil
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
-os.environ["CUDA_VISIBLE_DEVICES"]="4,5,6,7"
+# os.environ["CUDA_VISIBLE_DEVICES"]="4,5,6,7"
 
 MODEL_NAME =  'bert-base-uncased'
 MODEL_NAME =  'distilbert-base-uncased'
@@ -13,10 +13,10 @@ test_fname = data_folder + '/imdb_test_df.csv'
 
 MAX_SEQ_LEN = 512
 NUM_EPOCHS = 20
-BATCH_SIZE = 25
+BATCH_SIZE = 40
 LR = 0.00001
 NUM_CPU_WORKERS = psutil.cpu_count()
-PRINT_EVERY = 100
+PRINT_EVERY = 50
 BERT_LAYER_FREEZE = False
 
 

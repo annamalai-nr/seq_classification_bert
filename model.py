@@ -45,6 +45,6 @@ class bert_classifier(nn.Module):
         op = self.dp20(op)
         logits = self.fc2(op)
 
-        logits = self.log_softmax(logits)
+        # logits = self.log_softmax(logits)
 
         return logits

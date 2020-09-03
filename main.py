@@ -86,12 +86,12 @@ def main():
     train_set = dataset.dataset(dataset_fname = config.train_fname,
                                 model_name = config.MODEL_NAME,
                                 max_len=config.MAX_SEQ_LEN,
-                                sample_ratio =None,
+                                sample_ratio = None,
                                 is_lower=config.IS_LOWER)
     test_set = dataset.dataset(dataset_fname = config.test_fname,
                                model_name=config.MODEL_NAME,
                                max_len=config.MAX_SEQ_LEN,
-                               sample_ratio =None,
+                               sample_ratio = None,
                                is_lower=config.IS_LOWER)
 
     #creating dataloader
@@ -110,11 +110,12 @@ def main():
     print(f"created NEW TRANSFORMER model for finetuning: {bert_model}")
 
     #loss function
-    # criterion = nn.CrossEntropyLoss()
-    criterion = nn.NLLLoss()
+    criterion = nn.CrossEntropyLoss()
+    # criterion = nn.NLLLoss()
 
     #optimizer and scheduler
     optimizer = optim.Adam(bert_model.parameters(), lr=config.LR)
+    scheduler = None
 
     # param_optimizer = list(bert_model.named_parameters())
     # no_decay = ["bias", "LayerNorm.bias", "LayerNorm.weight"]
@@ -136,7 +137,6 @@ def main():
     # optimizer = AdamW(optimizer_parameters, lr=config.LR)
     # scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=0, num_training_steps=num_train_steps)
 
-    scheduler = None
 
     # Multi GPU setting
     if config.MULTIGPU:
